@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<script src="https://code.jquery.com/jquery-3.1.0.min.js" integrity="sha256-cCueBR6CsyA4/9szpPfrX3s49M9vUU5BgtiJj06wt/s=" crossorigin="anonymous"></script>
+		<script src="peer.min.js"></script>
+		<title>PeerJS test</title>
+	</head>
+	<body>
+		Peer JS Test<br />
+		<br />
+		<div id="actions" style="display: none;">
+			Connect to Peer<br />
+			<table style="padding: 0;">
+				<tr>
+					<td>&gt; Peer ID</td>
+					<td><input id="dest-ip" type="text" /></td>
+					<td><input id="connect-dest" type="submit" value="Connect" /></td>
+				</tr>
+			</table>
+			<br />
+			Destroy connection to server<br />
+			<input id="destroy-peer" type="submit" value="Destroy" />
+		</div>
+		<div id="video" style="border: solid 1px #000;">
+			Video Output: <br />
+			<video id="myVid" style="width: 240px; height: 160px; float: left;" autoplay></video>
+			<video id="peerVid" style="width: 240px; height: 160px; float: left;" autoplay></video>
+			<div style="clear: both;"></div>
+		</div>
+		<div id="statusText" style="white-space: pre-line;"></div>
+<script>
+var peer;
+var peerConnection;
+var userMediaStream;
+var peerMediaStream;
+var debug;
+function addStatus(string) {
+	var status = $('div#statusText');
+	var cText = status.html();
+	cText += "\n" + string;
+	status.html(cText);
+}
+
+function destroyPeer() {
+	peer.on('close', function() {
+		addStatus('Connection destroyed.');
+		addStatus('To restart the test, please reload the page.');
+	});
+	peer.destroy();
+	
+	userMediaStream.getAudioTracks().forEach(function(track) {
+		track.stop();
+	});
+	
+	userMediaStream.getVideoTracks().forEach(function(track) {
+		track.stop();
+	});
+}
+
+function initButtons() {
+	$('input#destroy-peer').click(function(event) {
+		event.preventDefault();
+		destroyPeer();
+	});
+	
+	$('input#connect-dest').click(function(event) {
+		event.preventDefault();
+		// SOMETHING, WIP
+		console.log('test');
+		var peerID = $('input#dest-ip').val();
+		peerConnection = peer.call(peerID, userMediaStream);
+		
+		var timer = setInterval(function() {
+			if (peerConnection.remoteStream !== undefined) {
+				clearInterval(timer);
+			} else {
+				console.log('not ready');
+				return;
+			}
+			peerMediaStream = peerConnection.remoteStream;
+			var peerVid = $('video#peerVid')[0];
+			peerVid.src = window.URL.createObjectURL(peerMediaStream);
+		}, 500);
+	});
+}
+
+function initPeer() {
+	addStatus('Establising to connection to server...');
+	addStatus('Stand by...');
+	
+	peer = new Peer({key: 'thn4647fhcl3di', secure: false});
+	peer.on('error', function(errMessage) {
+		addStatus('Error Occurred.');
+		addStatus('Error Message: ' + errMessage);
+	});
+	peer.on('open', function(id) {
+		addStatus('Connection Established.');
+		addStatus('Your Peer ID is assigned as <b>' + id + '</b>');
+		
+		initButtons();
+		$('div#actions').css({
+			'display': 'block'
+		});
+		addStatus('New action options are available.');
+	});
+	peer.on('call', function(call) {
+		// Answer the call, providing our mediaStream
+		call.answer(userMediaStream);
+		console.log('call receive');
+		
+		var timer = setInterval(function() {
+			if (call.remoteStream !== undefined) {
+				clearInterval(timer);
+			} else {
+				console.log('not ready');
+				return;
+			}
+			peerMediaStream = call.remoteStream;
+			var peerVid = $('video#peerVid')[0];
+			peerVid.src = window.URL.createObjectURL(peerMediaStream);
+		}, 500);
+		
+		// debug = call;
+		// console.log(debug);
+		// console.log(debug.remoteStream);
+		
+		// peerMediaStream = remoteStream;
+		// var peerVid = $('video#peerVid')[0];
+		//peerVid.src = window.URL.createObjectURL(peerMediaStream);
+	});
+	peer.on('stream', function(peerStream) {
+		// `stream` is the MediaStream of the remote peer.
+		// Here you'd add it to an HTML video/canvas element.
+		console.log('stream receive');
+		peerMediaStream = peerStream;
+		var peerVid = $('video#peerVid')[0];
+		peerVid.src = window.URL.createObjectURL(peerMediaStream);
+	});
+}
+
+window.onload = function() {
+	addStatus('Initializing user media...');
+	navigator.mediaDevices.getUserMedia({ 'audio': true, 'video': true })
+	.then(function(mediaStream) {
+		userMediaStream = mediaStream;
+		// console.log(userMediaStream);
+		var myVid = $('video#myVid')[0];
+		myVid.src = window.URL.createObjectURL(userMediaStream);
+		addStatus('User media stream retrieved.');
+		initPeer();
+	})
+	.catch(function (error) {
+		addStatus('Error occured upon retrieving user media.');
+		addStatus('Check console log for details.');
+		console.log(error);
+	});
+};
+</script>
+	</body>
+</html>
