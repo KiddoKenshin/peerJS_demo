@@ -66,16 +66,16 @@ function initButtons() {
 	
 	$('input#connect-dest').click(function(event) {
 		event.preventDefault();
-		// SOMETHING, WIP
 		console.log('test');
 		var peerID = $('input#dest-ip').val();
 		peerConnection = peer.call(peerID, userMediaStream);
 		
 		var timer = setInterval(function() {
+			// RemoteStream not available realtime (Async)
 			if (peerConnection.remoteStream !== undefined) {
 				clearInterval(timer);
 			} else {
-				console.log('not ready');
+				console.log('(Caller) Remote Stream Not Ready...');
 				return;
 			}
 			peerMediaStream = peerConnection.remoteStream;
@@ -89,7 +89,7 @@ function initPeer() {
 	addStatus('Establising to connection to server...');
 	addStatus('Stand by...');
 	
-	peer = new Peer({key: 'thn4647fhcl3di', secure: false});
+	peer = new Peer({key: 'your-api-key', secure: false});
 	peer.on('error', function(errMessage) {
 		addStatus('Error Occurred.');
 		addStatus('Error Message: ' + errMessage);
@@ -107,54 +107,74 @@ function initPeer() {
 	peer.on('call', function(call) {
 		// Answer the call, providing our mediaStream
 		call.answer(userMediaStream);
-		console.log('call receive');
 		
 		var timer = setInterval(function() {
+			// RemoteStream not available realtime (Async)
 			if (call.remoteStream !== undefined) {
 				clearInterval(timer);
 			} else {
-				console.log('not ready');
+				console.log('(Receiver) Remote Stream Not Ready...');
 				return;
 			}
 			peerMediaStream = call.remoteStream;
 			var peerVid = $('video#peerVid')[0];
 			peerVid.src = window.URL.createObjectURL(peerMediaStream);
 		}, 500);
-		
-		// debug = call;
-		// console.log(debug);
-		// console.log(debug.remoteStream);
-		
-		// peerMediaStream = remoteStream;
-		// var peerVid = $('video#peerVid')[0];
-		//peerVid.src = window.URL.createObjectURL(peerMediaStream);
 	});
 	peer.on('stream', function(peerStream) {
 		// `stream` is the MediaStream of the remote peer.
 		// Here you'd add it to an HTML video/canvas element.
+		// Event doesn't fire!
 		console.log('stream receive');
-		peerMediaStream = peerStream;
-		var peerVid = $('video#peerVid')[0];
-		peerVid.src = window.URL.createObjectURL(peerMediaStream);
+		// peerMediaStream = peerStream;
+		// var peerVid = $('video#peerVid')[0];
+		// peerVid.src = window.URL.createObjectURL(peerMediaStream);
 	});
 }
 
 window.onload = function() {
 	addStatus('Initializing user media...');
-	navigator.mediaDevices.getUserMedia({ 'audio': true, 'video': true })
-	.then(function(mediaStream) {
-		userMediaStream = mediaStream;
-		// console.log(userMediaStream);
-		var myVid = $('video#myVid')[0];
-		myVid.src = window.URL.createObjectURL(userMediaStream);
-		addStatus('User media stream retrieved.');
-		initPeer();
-	})
-	.catch(function (error) {
-		addStatus('Error occured upon retrieving user media.');
-		addStatus('Check console log for details.');
-		console.log(error);
-	});
+	
+	if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+		// Retrieve MediaStream using the latest specification.
+		// (HTTPS only, flags needed in Chrome<52>, works out of box in FireFox<48>)
+		navigator.mediaDevices.getUserMedia({'audio': true, 'video': true})
+		.then(function(mediaStream) {
+			userMediaStream = mediaStream;
+			var myVid = $('video#myVid')[0];
+			myVid.src = window.URL.createObjectURL(userMediaStream);
+			addStatus('User media stream retrieved.');
+			initPeer();
+		})
+		.catch(function (error) {
+			addStatus('Error occured upon retrieving user media.');
+			addStatus('Check console log for details.');
+			console.log(error);
+		});
+	} else if (navigator.webkitGetUserMedia || navigator.getUserMedia) {
+		// Retrieve MediaStream using the deprecated specification.
+		// (Fallback for Chrome)
+		if (navigator.webkitGetUserMedia) {
+			navigator.getUserMedia = navigator.webkitGetUserMedia;
+		}
+		
+		navigator.getUserMedia({'audio': true, 'video': true}, 
+		function(mediaStream) {
+			userMediaStream = mediaStream;
+			var myVid = $('video#myVid')[0];
+			myVid.src = window.URL.createObjectURL(userMediaStream);
+			addStatus('User media stream retrieved.');
+			initPeer();
+		},
+		function(error) {
+			addStatus('(WebKit) Error occured upon retrieving user media.');
+			addStatus('Check console log for details.');
+			console.log(error);
+		});
+	} else {
+		addStatus('WebRTC is not supported...');
+	}
+	
 };
 </script>
 	</body>
