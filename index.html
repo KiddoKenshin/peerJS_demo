@@ -90,6 +90,7 @@ function initPeer() {
 	addStatus('Stand by...');
 	
 	peer = new Peer({key: 'your-api-key', secure: false});
+	// Get PeerJS API key here: http://peerjs.com/peerserver
 	peer.on('error', function(errMessage) {
 		addStatus('Error Occurred.');
 		addStatus('Error Message: ' + errMessage);
@@ -143,6 +144,7 @@ window.onload = function() {
 			userMediaStream = mediaStream;
 			var myVid = $('video#myVid')[0];
 			myVid.src = window.URL.createObjectURL(userMediaStream);
+			myVid.muted = true;
 			addStatus('User media stream retrieved.');
 			initPeer();
 		})
