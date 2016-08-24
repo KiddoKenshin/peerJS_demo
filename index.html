@@ -34,7 +34,10 @@ var peer;
 var peerConnection;
 var userMediaStream;
 var peerMediaStream;
-var debug;
+
+var audioFlags = true;
+var videoConstraints = true;
+
 function addStatus(string) {
 	var status = $('div#statusText');
 	var cText = status.html();
@@ -137,10 +140,23 @@ function initPeer() {
 window.onload = function() {
 	addStatus('Initializing user media...');
 	
+	if (false) { // if (screensharing) { 
+		audioFlags = false;
+		videoConstraints = {
+			mediaSource: 'window' || 'screen',
+			mandatory: {
+				chromeMediaSource: 'screen',
+				maxWidth: 1280,
+				maxHeight: 720
+			},
+			optional: []
+		};
+	} 
+	
 	if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
 		// Retrieve MediaStream using the latest specification.
 		// (HTTPS only, flags needed in Chrome<52>, works out of box in FireFox<48>)
-		navigator.mediaDevices.getUserMedia({'audio': true, 'video': true})
+		navigator.mediaDevices.getUserMedia({'audio': audioFlags, 'video': videoConstraints})
 		.then(function(mediaStream) {
 			userMediaStream = mediaStream;
 			var myVid = $('video#myVid')[0];
@@ -161,7 +177,7 @@ window.onload = function() {
 			navigator.getUserMedia = navigator.webkitGetUserMedia;
 		}
 		
-		navigator.getUserMedia({'audio': true, 'video': true}, 
+		navigator.getUserMedia({'audio': audioFlags, 'video': videoConstraints}, 
 		function(mediaStream) {
 			userMediaStream = mediaStream;
 			var myVid = $('video#myVid')[0];
