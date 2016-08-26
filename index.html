@@ -133,13 +133,31 @@ function initPeer() {
 	peer.on('call', function(call) {
 		// Answer the call, providing our mediaStream
 		console.log('Call received');
-		// call.answer(userMediaStream);
+		call.answer(userMediaStream);
+		$('div#loader').css('display', 'block');
 		
 		call.on('stream', function(peerStream) {
 			console.log('(Receiver) Stream received');
+			$('div#loader').css('display', 'none');
 			peerMediaStream = peerStream;
 			var peerVid = $('video#peerVid')[0];
 			peerVid.src = window.URL.createObjectURL(peerMediaStream);
+			
+			$('div#peerinput').animate({
+				opacity: 0
+			}, 500, 'swing', function() {
+				$(this).css({
+					display: 'none',
+					opacity: 1
+				});
+				$('video#peerVid').css({
+					opacity: 0,
+					display: 'block'
+				});
+				$('video#peerVid').animate({
+					opacity: 1
+				}, 500, 'swing');
+			});
 		});
 	});
 }
