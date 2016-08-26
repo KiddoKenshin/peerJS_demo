@@ -1,51 +1,34 @@
 <!DOCTYPE html>
-<html lang="en" style="height: 100%;">
+<html lang="en">
 	<head>
 		<meta charset="UTF-8" />
-		<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-		<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" media="screen,projection">
-		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.7/css/materialize.min.css">
 		<script src="https://code.jquery.com/jquery-3.1.0.min.js" integrity="sha256-cCueBR6CsyA4/9szpPfrX3s49M9vUU5BgtiJj06wt/s=" crossorigin="anonymous"></script>
-		<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.7/js/materialize.min.js"></script>
 		<script src="peer.js"></script>
-		<title>PeerJS Video Call Demo</title>
+		<title>PeerJS test</title>
 	</head>
-	<body class="teal lighten-5" style="position: relative; height: 100%;">
-		<div class="row teal accent-4" style="height: 3rem; padding: 0.75rem 0; margin-bottom: 0;">
-			<div class="col m8 hide-on-small-only">
-				WebRTC with PeerJS
-			</div>
-			<div class="col s12 m4" style="text-align: right;">
-				Your ID: <span id="peer_id" style="font-weight: bold;">Initializing...</span>
-			</div>
+	<body>
+		Peer JS Test<br />
+		<br />
+		<div id="actions" style="display: none;">
+			Connect to Peer<br />
+			<table style="padding: 0;">
+				<tr>
+					<td>&gt; Peer ID</td>
+					<td><input id="dest-ip" type="text" /></td>
+					<td><input id="connect-dest" type="submit" value="Connect" /></td>
+				</tr>
+			</table>
+			<br />
+			Destroy connection to server<br />
+			<input id="destroy-peer" type="submit" value="Destroy" />
 		</div>
-		<div class="row" style="height: calc(100% - 3rem); margin-bottom: 0;">
-			<div class="col s12 m8" style="position: relative; padding-top: 2rem; height: 100%; text-align: center;">
-				<div id="peerinput" class="input-field col s6 offset-s3 m6 offset-m3" style="margin-top: 8rem;">
-					<label for="opponent_id">Opponent ID</label>
-					<input id="opponent_id" type="text" />
-					<input id="connect" class="btn waves-effect waves-light" type="submit" value="Connect" />
-				</div>
-				<video id="peerVid" style="width: 96%; height: auto; margin: 0 auto; display: none;" autoplay></video>
-				<div id="loader" style="position: absolute; width: 100%; height: 100%; left: 0; top: 0; z-index: 1; background-color: rgba(0, 0, 0, 0.6); display: none;">
-					<div class="preloader-wrapper big active" style="margin-top: 16rem;">
-						<div class="spinner-layer spinner-blue-only">
-							<div class="circle-clipper left">
-								<div class="circle"></div>
-							</div><div class="gap-patch">
-								<div class="circle"></div>
-							</div><div class="circle-clipper right">
-								<div class="circle"></div>
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
-			<div class="col m4 teal darken-2 hide-on-small-only" style="padding-top: 2rem; height: 100%; text-align: center;">
-				<video id="myVid" style="width: 80%; height: auto;" autoplay></video>
-			</div>
+		<div id="video" style="border: solid 1px #000;">
+			Video Output: <br />
+			<video id="myVid" style="width: 240px; height: 160px; float: left;" autoplay></video>
+			<video id="peerVid" style="width: 240px; height: 160px; float: left;" autoplay></video>
+			<div style="clear: both;"></div>
 		</div>
-		
+		<div id="statusText" style="white-space: pre-line;"></div>
 <script>
 var peer;
 var peerConnection;
@@ -79,61 +62,51 @@ function destroyPeer() {
 }
 
 function initButtons() {
-	/*
 	$('input#destroy-peer').click(function(event) {
 		event.preventDefault();
 		destroyPeer();
 	});
-	//*/
 	
-	$('input#connect').click(function(event) {
+	$('input#connect-dest').click(function(event) {
 		event.preventDefault();
-		$('div#loader').css('display', 'block');
-		var peerID = $('input#opponent_id').val();
+		var peerID = $('input#dest-ip').val();
 		peerConnection = peer.call(peerID, userMediaStream);
 		
 		peerConnection.on('stream', function(peerStream) {
 			console.log('(Caller) Stream received');
-			$('div#loader').css('display', 'none');
 			peerMediaStream = peerStream;
 			var peerVid = $('video#peerVid')[0];
 			peerVid.src = window.URL.createObjectURL(peerMediaStream);
-			
-			$('div#peerinput').animate({
-				opacity: 0
-			}, 500, 'swing', function() {
-				$(this).css({
-					display: 'none',
-					opacity: 1
-				});
-				$('video#peerVid').css({
-					opacity: 0,
-					display: 'block'
-				});
-				$('video#peerVid').animate({
-					opacity: 1
-				}, 500, 'swing');
-			});
 		});
 	});
 }
 
 function initPeer() {
+	addStatus('Establising to connection to server...');
+	addStatus('Stand by...');
+	
 	peer = new Peer({host: 'peerjs-server-demo.herokuapp.com', secure: true, port: 443, debug: 3, wsping: 1000 * 50});
 	peer.on('error', function(errMessage) {
+		addStatus('Error Occurred.');
+		addStatus('Error Message: ' + errMessage);
 		if (errMessage == 'Error: Lost connection to server.') {
-			$('span#peer_id').html('disconnected');
 			peer.reconnect();
 		}
 	});
 	peer.on('open', function(id) {
-		$('span#peer_id').html(id);
+		addStatus('Connection Established.');
+		addStatus('Your Peer ID is assigned as <b>' + id + '</b>');
+		
 		initButtons();
+		$('div#actions').css({
+			'display': 'block'
+		});
+		addStatus('New action options are available.');
 	});
 	peer.on('call', function(call) {
 		// Answer the call, providing our mediaStream
 		console.log('Call received');
-		// call.answer(userMediaStream);
+		call.answer(userMediaStream);
 		
 		call.on('stream', function(peerStream) {
 			console.log('(Receiver) Stream received');
@@ -145,6 +118,8 @@ function initPeer() {
 }
 
 window.onload = function() {
+	addStatus('Initializing user media...');
+	
 	if (false) { // if (screensharing) { 
 		audioFlags = false;
 		videoConstraints = {
@@ -167,9 +142,12 @@ window.onload = function() {
 			var myVid = $('video#myVid')[0];
 			myVid.src = window.URL.createObjectURL(userMediaStream);
 			myVid.muted = true;
+			addStatus('User media stream retrieved.');
 			initPeer();
 		})
 		.catch(function (error) {
+			addStatus('Error occured upon retrieving user media.');
+			addStatus('Check console log for details.');
 			console.log(error);
 		});
 	} else if (navigator.webkitGetUserMedia || navigator.getUserMedia) {
@@ -185,14 +163,16 @@ window.onload = function() {
 			var myVid = $('video#myVid')[0];
 			myVid.src = window.URL.createObjectURL(userMediaStream);
 			myVid.muted = true;
+			addStatus('User media stream retrieved.');
 			initPeer();
 		},
 		function(error) {
+			addStatus('(WebKit) Error occured upon retrieving user media.');
+			addStatus('Check console log for details.');
 			console.log(error);
 		});
 	} else {
-		console.log('WebRTC is not supported...');
-		alert('WebRTC is not supported...');
+		addStatus('WebRTC is not supported...');
 	}
 	
 };
