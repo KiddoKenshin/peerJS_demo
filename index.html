@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" style="height: 100%;">
+<html lang="en">
 	<head>
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
@@ -8,27 +8,112 @@
 		<script src="https://code.jquery.com/jquery-3.1.0.min.js" integrity="sha256-cCueBR6CsyA4/9szpPfrX3s49M9vUU5BgtiJj06wt/s=" crossorigin="anonymous"></script>
 		<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.7/js/materialize.min.js"></script>
 		<script src="peer.js"></script>
+		<style>
+			html, body {
+				height: 100%;
+			}
+			
+			body {
+				position: relative;
+			}
+			
+			div#header_bar {
+				height: 3rem;
+				padding: 0.75rem 0;
+				margin-bottom: 0;
+			}
+			
+			div#header_bar div#id_corner {
+				text-align: right;
+			}
+			
+			div#header_bar div#id_corner span#peer_id {
+				font-weight: bold;
+			}
+			
+			div#content {
+				height: calc(100% - 3rem);
+				margin-bottom: 0;
+			}
+			
+			div#content div#left_area,
+			div#content div#right_area {
+				padding-top: 2rem;
+				height: 100%;
+			}
+			
+			div#content div#left_area {
+				position: relative;
+				text-align: center;
+			}
+			
+			div#content div#left_area div#peer_input {
+				margin-top: 8rem;
+			}
+			
+			div#content div#left_area video#peer_vid,
+			div#content div#right_area video#my_vid {
+				width: 96%;
+				height: auto;
+				margin: 0 auto;
+			}
+			
+			div#content div#left_area div#loader {
+				position: absolute;
+				width: 100%;
+				height: 100%;
+				left: 0;
+				top: 0;
+				background-color: rgba(0, 0, 0, 0.6);
+				z-index: 1;
+			}
+			
+			div#content div#left_area div#loader div#main {
+				margin-top: 16rem;
+			}
+			
+			div#content div#right_area video#my_vid {
+				display: block;
+				width: 80%;
+			}
+			
+			div#content div#right_area div#buttons {
+				text-align: center;
+			}
+			
+			div#content div#right_area div#buttons button {
+				width: 80%;
+			}
+			
+			div#content div#left_area div#peer_input button#connect,
+			div#content div#left_area video#peer_vid,
+			div#content div#left_area div#loader,
+			div#content div#right_area div#buttons button#destroy_connection {
+				display: none;
+			}
+		</style>
 		<title>PeerJS Video Call Demo</title>
 	</head>
-	<body class="teal lighten-5" style="position: relative; height: 100%;">
-		<div class="row teal accent-4" style="height: 3rem; padding: 0.75rem 0; margin-bottom: 0;">
+	<body class="teal lighten-5">
+		<div id="header_bar" class="row teal accent-4">
 			<div class="col m8 hide-on-small-only">
 				WebRTC with PeerJS
 			</div>
-			<div class="col s12 m4" style="text-align: right;">
-				Your ID: <span id="peer_id" style="font-weight: bold;">Initializing...</span>
+			<div id="id_corner" class="col s12 m4">
+				Your ID: <span id="peer_id">Initializing...</span>
 			</div>
 		</div>
-		<div class="row" style="height: calc(100% - 3rem); margin-bottom: 0;">
-			<div class="col s12 m8" style="position: relative; padding-top: 2rem; height: 100%; text-align: center;">
-				<div id="peerinput" class="input-field col s6 offset-s3 m6 offset-m3" style="margin-top: 8rem;">
+		<div id="content" class="row">
+			<div id="left_area" class="col s12 m8">
+				<div id="peer_input" class="input-field col s6 offset-s3 m6 offset-m3">
 					<label for="opponent_id">Opponent ID</label>
-					<input id="opponent_id" type="text" />
-					<input id="connect" class="btn waves-effect waves-light" type="submit" value="Connect" />
+					<input id="opponent_id" type="text" /><br />
+					<span id="init_span">Choose your communication type on the right panel.</span>
+					<button id="connect" class="btn waves-effect waves-light" type="submit">Connect</button>
 				</div>
-				<video id="peerVid" style="width: 96%; height: auto; margin: 0 auto; display: none;" autoplay></video>
-				<div id="loader" style="position: absolute; width: 100%; height: 100%; left: 0; top: 0; z-index: 1; background-color: rgba(0, 0, 0, 0.6); display: none;">
-					<div class="preloader-wrapper big active" style="margin-top: 16rem;">
+				<video id="peer_vid" style="" autoplay></video>
+				<div id="loader">
+					<div id="main" class="preloader-wrapper big active">
 						<div class="spinner-layer spinner-blue-only">
 							<div class="circle-clipper left">
 								<div class="circle"></div>
@@ -41,8 +126,18 @@
 					</div>
 				</div>
 			</div>
-			<div class="col m4 teal darken-2 hide-on-small-only" style="padding-top: 2rem; height: 100%; text-align: center;">
-				<video id="myVid" style="width: 80%; height: auto;" autoplay></video>
+			<div id="right_area" class="col m4 teal darken-2 hide-on-small-only">
+				<video id="my_vid" poster="data:image/png;base64,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" autoplay></video>
+				<br />
+				<!-- TODO: Mobile devices are unable to select these actions -->
+				<div id="buttons">
+					<button id="audio_only" class="btn waves-effect waves-light" type="submit">Audio Only</button>
+					<button id="video_call" class="btn waves-effect waves-light" type="submit">Video Call</button>
+					<!-- Hide due to experimental feature. Currently requires nasty flags alternation to work.
+					<button id="screen_share" class="btn waves-effect waves-light" type="submit">Screen Share</button>
+					-->
+					<button id="destroy_connection" class="btn waves-effect waves-light" type="submit">Disconnect</button>
+				</div>
 			</div>
 		</div>
 		
@@ -52,20 +147,98 @@ var peerConnection;
 var userMediaStream;
 var peerMediaStream;
 
-var audioFlags = true;
-var videoConstraints = true;
+function getUserMediaStream(type) {
+	var audioConstraints = false;
+	var videoConstraints = false;
+	
+	switch (type) {
+		case 'audio_only':
+			audioConstraints = true;
+			break;
+		case 'video_call':
+			audioConstraints = true;
+			videoConstraints = true;
+			break;
+		case 'screen_share':
+			// Audio recording not support at the moment during screen sharing
+			videoConstraints = {
+				mediaSource: 'screen',
+				mandatory: {
+					chromeMediaSource: 'screen',
+					maxWidth: 1280,
+					maxHeight: 720
+				},
+				optional: []
+			};
+			break;
+	}
+	
+	function initMyVid(mediaStreamObj) {
+		userMediaStream = mediaStreamObj;
+		var myVid = $('video#my_vid')[0];
+		myVid.src = window.URL.createObjectURL(userMediaStream);
+		myVid.muted = true;
+	}
+	
+	if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+		// Retrieve MediaStream using the latest specification.
+		// (HTTPS only, flags needed in Chrome<52>, works out of box in FireFox<48>)
+		navigator.mediaDevices.getUserMedia({'audio': audioConstraints, 'video': videoConstraints})
+		.then(function(mediaStream) {
+			initMyVid(mediaStream);
+		})
+		.catch(function (error) {
+			console.log(error);
+		});
+	} else if (navigator.webkitGetUserMedia || navigator.getUserMedia) {
+		// Retrieve MediaStream using the deprecated specification.
+		// (Fallback for Chrome)
+		if (navigator.webkitGetUserMedia) {
+			navigator.getUserMedia = navigator.webkitGetUserMedia;
+		}
+		
+		navigator.getUserMedia({'audio': audioConstraints, 'video': videoConstraints}, 
+		function(mediaStream) {
+			initMyVid(mediaStream);
+		},
+		function(error) {
+			console.log(error);
+		});
+	}
+}
 
-function addStatus(string) {
-	var status = $('div#statusText');
-	var cText = status.html();
-	cText += "\n" + string;
-	status.html(cText);
+function initPeerStream(peerObj, type) {
+	peerObj.on('stream', function(peerStream) {
+		console.log('(' + type + ') Stream received');
+		$('div#loader').css('display', 'none');
+		$('button#destroy_connection').css('display', 'inline-block');
+		
+		peerMediaStream = peerStream;
+		var peerVidObj = $('video#peer_vid');
+		var peerVid = peerVidObj[0];
+		peerVid.src = window.URL.createObjectURL(peerMediaStream);
+		
+		$('div#peer_input').animate({
+			opacity: 0
+		}, 500, 'swing', function() {
+			$(this).css({
+				display: 'none',
+				opacity: 1
+			});
+			peerVidObj.css({
+				opacity: 0,
+				display: 'block'
+			})
+			.animate({
+				opacity: 1
+			}, 500, 'swing');
+		});
+	});
 }
 
 function destroyPeer() {
 	peer.on('close', function() {
-		addStatus('Connection destroyed.');
-		addStatus('To restart the test, please reload the page.');
+		console.log('close');
 	});
 	peer.destroy();
 	
@@ -76,45 +249,41 @@ function destroyPeer() {
 	userMediaStream.getVideoTracks().forEach(function(track) {
 		track.stop();
 	});
+	
+	peerMediaStream.getAudioTracks().forEach(function(track) {
+		track.stop();
+	});
+	
+	peerMediaStream.getVideoTracks().forEach(function(track) {
+		track.stop();
+	});
 }
 
 function initButtons() {
-	/*
-	$('input#destroy-peer').click(function(event) {
+	// Initialization related
+	$('div#buttons button[id!=destroy_connection]').click(function(event) {
 		event.preventDefault();
-		destroyPeer();
+		var streamType = $(this).attr('id');
+		
+		getUserMediaStream(streamType);
+		$('span#init_span, div#buttons button[id!=destroy_connection]').css('display', 'none');
+		$('button#connect').css('display', 'inline-block');
 	});
-	//*/
 	
-	$('input#connect').click(function(event) {
+	// Connection Related
+	$('button#connect').click(function(event) {
 		event.preventDefault();
 		$('div#loader').css('display', 'block');
-		var peerID = $('input#opponent_id').val();
+		$('button#connect').removeAttr('style');
+		var peerID = $('button#opponent_id').val();
 		peerConnection = peer.call(peerID, userMediaStream);
 		
-		peerConnection.on('stream', function(peerStream) {
-			console.log('(Caller) Stream received');
-			$('div#loader').css('display', 'none');
-			peerMediaStream = peerStream;
-			var peerVid = $('video#peerVid')[0];
-			peerVid.src = window.URL.createObjectURL(peerMediaStream);
-			
-			$('div#peerinput').animate({
-				opacity: 0
-			}, 500, 'swing', function() {
-				$(this).css({
-					display: 'none',
-					opacity: 1
-				});
-				$('video#peerVid').css({
-					opacity: 0,
-					display: 'block'
-				});
-				$('video#peerVid').animate({
-					opacity: 1
-				}, 500, 'swing');
-			});
-		});
+		initPeerStream(peerConnection, 'Caller');
+	});
+	
+	$('button#destroy_connection').click(function(event) {
+		event.preventDefault();
+		destroyPeer();
 	});
 }
 
@@ -136,83 +305,17 @@ function initPeer() {
 		call.answer(userMediaStream);
 		$('div#loader').css('display', 'block');
 		
-		call.on('stream', function(peerStream) {
-			console.log('(Receiver) Stream received');
-			$('div#loader').css('display', 'none');
-			peerMediaStream = peerStream;
-			var peerVid = $('video#peerVid')[0];
-			peerVid.src = window.URL.createObjectURL(peerMediaStream);
-			
-			$('div#peerinput').animate({
-				opacity: 0
-			}, 500, 'swing', function() {
-				$(this).css({
-					display: 'none',
-					opacity: 1
-				});
-				$('video#peerVid').css({
-					opacity: 0,
-					display: 'block'
-				});
-				$('video#peerVid').animate({
-					opacity: 1
-				}, 500, 'swing');
-			});
-		});
+		initPeerStream(call, 'Receiver');
 	});
 }
 
 window.onload = function() {
-	if (false) { // if (screensharing) { 
-		audioFlags = false;
-		videoConstraints = {
-			mediaSource: 'screen',
-			mandatory: {
-				chromeMediaSource: 'screen',
-				maxWidth: 1280,
-				maxHeight: 720
-			},
-			optional: []
-		};
-	} 
-	
-	if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-		// Retrieve MediaStream using the latest specification.
-		// (HTTPS only, flags needed in Chrome<52>, works out of box in FireFox<48>)
-		navigator.mediaDevices.getUserMedia({'audio': audioFlags, 'video': videoConstraints})
-		.then(function(mediaStream) {
-			userMediaStream = mediaStream;
-			var myVid = $('video#myVid')[0];
-			myVid.src = window.URL.createObjectURL(userMediaStream);
-			myVid.muted = true;
-			initPeer();
-		})
-		.catch(function (error) {
-			console.log(error);
-		});
-	} else if (navigator.webkitGetUserMedia || navigator.getUserMedia) {
-		// Retrieve MediaStream using the deprecated specification.
-		// (Fallback for Chrome)
-		if (navigator.webkitGetUserMedia) {
-			navigator.getUserMedia = navigator.webkitGetUserMedia;
-		}
-		
-		navigator.getUserMedia({'audio': audioFlags, 'video': videoConstraints}, 
-		function(mediaStream) {
-			userMediaStream = mediaStream;
-			var myVid = $('video#myVid')[0];
-			myVid.src = window.URL.createObjectURL(userMediaStream);
-			myVid.muted = true;
-			initPeer();
-		},
-		function(error) {
-			console.log(error);
-		});
+	if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia || ((navigator.webkitGetUserMedia || navigator.getUserMedia))) {
+		initPeer();
 	} else {
 		console.log('WebRTC is not supported...');
 		alert('WebRTC is not supported...');
 	}
-	
 };
 </script>
 	</body>
