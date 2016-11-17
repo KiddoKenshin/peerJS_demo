@@ -275,7 +275,7 @@ function initButtons() {
 		event.preventDefault();
 		$('div#loader').css('display', 'block');
 		$('button#connect').removeAttr('style');
-		var peerID = $('button#opponent_id').val();
+		var peerID = $('input#opponent_id').val();
 		peerConnection = peer.call(peerID, userMediaStream);
 		
 		initPeerStream(peerConnection, 'Caller');
